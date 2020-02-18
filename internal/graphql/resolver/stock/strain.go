@@ -28,6 +28,8 @@ const (
 	mutagenesisOntology = "Dd Mutagenesis Method"
 	dictyAnnoOntology   = "dicty_annotation"
 	strainCharOnto      = "strain_characteristics"
+	strainInvOnto       = "strain_inventory"
+	invLocationTag      = "location"
 	literatureTag       = "literature_tag"
 	noteTag             = "public note"
 	sysnameTag          = "systematic name"
@@ -323,7 +325,28 @@ func (r *StrainResolver) Genotypes(ctx context.Context, obj *models.Strain) ([]*
 	return g, nil
 }
 
-// still needs to be implemented properly
 func (r *StrainResolver) InStock(ctx context.Context, obj *models.Strain) (bool, error) {
+	strainId := obj.Data.Id
+	gc, err := r.AnnotationClient.ListAnnotationGroups(
+		ctx,
+		&annotation.ListGroupParameters{
+			Filter: fmt.Sprintf(
+				"entry_id==%s;tag==%s;ontology==%s",
+				strainId,
+				invLocationTag,
+				strainInvOnto,
+			),
+		})
+	if err != nil {
+		if grpc.Code(err) == codes.NotFound {
+			return false, nil
+		}
+		errorutils.AddGQLError(ctx, err)
+		r.Logger.Error(err)
+		return false, err
+	}
+	if len(gc.Data) < 1 {
+		return false, nil
+	}
 	return true, nil
 }
