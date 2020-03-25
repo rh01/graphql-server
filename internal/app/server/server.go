@@ -73,12 +73,13 @@ func RunGraphQLServer(c *cli.Context) error {
 
 	crs := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"*"},
 	})
 	router.Use(crs.Handler)
 	router.Use(middleware.AuthenticationMiddleWare)
+	router.Use(middleware.AuthorizationMiddleware)
 
 	execSchema := generated.NewExecutableSchema(generated.Config{Resolvers: s})
 	gqlHandler := handler.GraphQL(execSchema, handler.EnablePersistedQueryCache(cache))
