@@ -78,13 +78,13 @@ func RunGraphQLServer(c *cli.Context) error {
 		AllowedHeaders:   []string{"*"},
 	})
 	router.Use(crs.Handler)
-	router.Use(middleware.AuthMiddleWare)
+	router.Use(middleware.AuthenticationMiddleWare)
 
 	execSchema := generated.NewExecutableSchema(generated.Config{Resolvers: s})
 	gqlHandler := handler.GraphQL(execSchema, handler.EnablePersistedQueryCache(cache))
 	router.Handle("/", handler.Playground("GraphQL playground", "/graphql"))
 	router.Handle("/graphql", gqlHandler)
-	log.Debugf("connect to http://localhost:8080/ for GraphQL playground")
+	log.Debugf("connect to port 8080 for GraphQL playground")
 	log.Fatal(http.ListenAndServe(":8080", router))
 	return nil
 }

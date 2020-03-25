@@ -45,7 +45,7 @@ func (w *authResponseWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
-func AuthMiddleWare(h http.Handler) http.Handler {
+func AuthenticationMiddleWare(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		arw := authResponseWriter{w, "", ""}
