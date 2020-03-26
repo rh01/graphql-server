@@ -20,6 +20,7 @@ type Params struct {
 
 func AuthorizationMiddleware(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		allowedMutations := []string{"CreateOrder", "Login", "IntrospectionQuery"}
 		var params Params
 		// convert request body to bytes then unmarshal the json
 		bodyBytes, _ := ioutil.ReadAll(r.Body)
@@ -28,10 +29,13 @@ func AuthorizationMiddleware(h http.Handler) http.Handler {
 		}
 		// construct a new ReadCloser
 		r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
-		// if createOrder, let it pass
-		if strings.Contains(params.OperationName, "CreateOrder") {
-			fmt.Printf("got %s mutation, OK to pass", params.OperationName)
-			return
+		// let slice of allowed mutations pass through
+		for _, m := range allowedMutations {
+			if strings.Contains(params.OperationName, m) {
+				fmt.Printf("got %s mutation, no token necessary \n", params.OperationName)
+				h.ServeHTTP(w, r)
+				return
+			}
 		}
 		// verify request is a mutation
 		if strings.Contains(params.Query, "mutation") {
@@ -43,7 +47,7 @@ func AuthorizationMiddleware(h http.Handler) http.Handler {
 				log.Fatal("Bearer token not in proper format")
 			}
 			reqToken = strings.TrimSpace(splitToken[1])
-			fmt.Println("token is %s", reqToken)
+			fmt.Printf("token is %s", reqToken)
 			if reqToken != "" {
 				h.ServeHTTP(w, r)
 				return
